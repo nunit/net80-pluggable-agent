@@ -22,7 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{34216BD6-51BE-44BE-9E0D-503ACB44B54C}"
 	ProjectSection(SolutionItems) = preProject
-		nuget\DotnetToolSettings.xml = nuget\DotnetToolSettings.xml
 		nuget\Net80PluggableAgent.nuspec = nuget\Net80PluggableAgent.nuspec
 	EndProjectSection
 EndProject
