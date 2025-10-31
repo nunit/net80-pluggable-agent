@@ -13,7 +13,7 @@ using NUnit.Extensibility;
 
 namespace NUnit.Engine.Agents
 {
-    [Extension(Description = "Pluggable agent running tests under .NET 8.0", EngineVersion = "4.0.0")]
+    [Extension(Description = "Pluggable agent running tests under .NET 8.0", ExtensibilityVersion = "4.0.0")]
     [ExtensionProperty("AgentType", "LocalProcess")]
     [ExtensionProperty("TargetFramework", ".NETCoreApp,Version=8.0")]
     public class Net80AgentLauncher : IAgentLauncher
