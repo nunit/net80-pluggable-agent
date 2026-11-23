@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using NUnit.Common;
@@ -15,7 +14,7 @@ namespace NUnit.Engine.Agents
 {
     [Extension(Description = "Pluggable agent running tests under .NET 8.0", ExtensibilityVersion = "4.0.0")]
     [ExtensionProperty("AgentType", "LocalProcess")]
-    [ExtensionProperty("TargetFramework", ".NETCoreApp,Version=8.0")]
+    [ExtensionProperty("TargetFramework", ".NETCoreApp,Version=v8.0")]
     public class Net80AgentLauncher : IAgentLauncher
     {
         private static readonly string LAUNCHER_DIR = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
@@ -27,8 +26,8 @@ namespace NUnit.Engine.Agents
         protected static string AgentPath => Path.Combine(LAUNCHER_DIR, $"../agent/nunit-agent-net80.dll");
 
         public TestAgentInfo AgentInfo => new TestAgentInfo(
-            GetType().Name, 
-            TestAgentType.LocalProcess, 
+            GetType().Name,
+            TestAgentType.LocalProcess,
             TARGET_FRAMEWORK);
 
         public bool CanCreateAgent(TestPackage package)
@@ -36,7 +35,6 @@ namespace NUnit.Engine.Agents
             // Get target runtime from package
             string runtimeSetting = package.Settings.GetValueOrDefault(SettingDefinitions.TargetFrameworkName);
             var targetRuntime = new FrameworkName(runtimeSetting);
-            bool runAsX86 = package.Settings.GetValueOrDefault(SettingDefinitions.RunAsX86);
 
             return targetRuntime.Identifier == RUNTIME_IDENTIFIER && targetRuntime.Version.Major <= RUNTIME_VERSION.Major;
         }
@@ -57,7 +55,7 @@ namespace NUnit.Engine.Agents
             bool runAsX86 = settings.GetValueOrDefault(SettingDefinitions.RunAsX86);
             bool debugTests = settings.GetValueOrDefault(SettingDefinitions.DebugTests);
             bool debugAgent = settings.GetValueOrDefault(SettingDefinitions.DebugAgent);
-            string traceLevel = settings.GetValueOrDefault(SettingDefinitions.InternalTraceLevel);
+            string traceLevel = settings.GetValueOrDefault(SettingDefinitions.InternalTraceLevel) ?? "Warning";
             bool loadUserProfile = settings.GetValueOrDefault(SettingDefinitions.LoadUserProfile);
             string workDirectory = settings.GetValueOrDefault(SettingDefinitions.WorkDirectory);
 
@@ -69,8 +67,7 @@ namespace NUnit.Engine.Agents
 
             // Set options that need to be in effect before the package
             // is loaded by using the command line.
-            if (traceLevel != "Off")
-                sb.Append(" --trace=").EscapeProcessArgument(traceLevel);
+            sb.Append(" --trace=").EscapeProcessArgument(traceLevel);
             if (debugAgent)
                 sb.Append(" --debug-agent");
             if (debugTests)

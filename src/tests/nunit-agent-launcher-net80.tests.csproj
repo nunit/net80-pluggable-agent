@@ -3,11 +3,9 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NUnit.Engine.Agents</RootNamespace>
-		<TargetFrameworks>net462;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;net10.0</TargetFrameworks>
 		<OutputPath>..\..\bin\$(Configuration)\</OutputPath>
-		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
   
 	<ItemGroup>
@@ -18,12 +16,6 @@
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnitLite" />
 		<PackageReference Include="NUnit.Engine.Api" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="app.config">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 </Project>

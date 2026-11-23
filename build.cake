@@ -1,7 +1,7 @@
 // Load the recipe
-#load nuget:?package=NUnit.Cake.Recipe&version=2.0.0-beta.5
+#load nuget:?package=NUnit.Cake.Recipe&version=2.0.0-beta.5.9
 // Comment out above line and uncomment below for local tests of recipe changes
-//#load ../NUnit.Cake.Recipe/src/NUnit.Cake.Recipe/content/*.cake
+//#load ../NUnit.Cake.Recipe/recipe/*.cake
 
 BuildSettings.Initialize
 (
@@ -15,20 +15,10 @@ BuildSettings.Initialize
 );
 
 var PackageTests = new PackageTest[] {
-    new PackageTest(1, "NetCore31PackageTest")
+    new PackageTest(1, "Net80PackageTest")
     {
-        Description = "Run mock-assembly.dll targeting .NET Core 3.1",
-        Arguments = "testdata/netcoreapp3.1/mock-assembly.dll",
-        ExpectedResult = new ExpectedResult("Failed")
-        {
-            Total = 35, Passed = 21, Failed = 5, Warnings = 1, Inconclusive = 1, Skipped = 7,
-            Assemblies = new ExpectedAssemblyResult[] { new ExpectedAssemblyResult("mock-assembly.dll") }
-        }
-    },
-    new PackageTest(1, "Net60PackageTest")
-    {
-        Description = "Run mock-assembly.dll targeting .NET 6.0",
-        Arguments = "testdata/net6.0/mock-assembly.dll",
+        Description = "Run mock-assembly.dll targeting .NET 8.0",
+        Arguments = "testdata/net8.0/mock-assembly.dll",
         ExpectedResult = new ExpectedResult("Failed")
         {
             Total = 35, Passed = 21, Failed = 5, Warnings = 1, Inconclusive = 1, Skipped = 7,
@@ -45,10 +35,10 @@ var PackageTests = new PackageTest[] {
             Assemblies = new ExpectedAssemblyResult[] { new ExpectedAssemblyResult("mock-assembly.dll") }
         }
     },
-    new PackageTest(1, "Net80PackageTest")
+    new PackageTest(1, "Net60PackageTest")
     {
-        Description = "Run mock-assembly.dll targeting .NET 8.0",
-        Arguments = "testdata/net8.0/mock-assembly.dll",
+        Description = "Run mock-assembly.dll targeting .NET 6.0",
+        Arguments = "testdata/net6.0/mock-assembly.dll",
         ExpectedResult = new ExpectedResult("Failed")
         {
             Total = 35, Passed = 21, Failed = 5, Warnings = 1, Inconclusive = 1, Skipped = 7,
@@ -84,16 +74,16 @@ BuildSettings.Packages.Add(new NuGetPackage(
     {
         HasFiles("LICENSE.txt", "README.md", "nunit_256.png"),
         HasDirectory("tools/agent").WithFiles(
-            "nunit-agent-net80.dll", "nunit.engine.api.dll", "nunit.common.dll", 
+            "nunit-agent-net80.dll", "nunit.engine.api.dll", "nunit.common.dll",
             "nunit.extensibility.api.dll", "nunit.extensibility.dll", "nunit.agent.core.dll",
             "TestCentric.Metadata.dll", "Microsoft.Extensions.DependencyModel.dll"),
         HasDirectory("tools/net462").WithFiles(
             "nunit-agent-launcher-net80.dll", "nunit.engine.api.dll"),
-        HasDirectory("tools/net8.0").WithFiles(
+        HasDirectory("tools/net10.0").WithFiles(
             "nunit-agent-launcher-net80.dll", "nunit.engine.api.dll")
     },
-    //symbols: new PackageCheck[]
-    testRunner: new AgentRunner(BuildSettings.NuGetTestDirectory + "NUnit.Extension.Net80PluggableAgent." + BuildSettings.PackageVersion + "/tools/agent/nunit-agent-net80.dll"),
+    testRunner: new AgentRunner(
+        BuildSettings.NuGetTestDirectory + "NUnit.Extension.Net80PluggableAgent." + BuildSettings.PackageVersion + "/tools/agent/nunit-agent-net80.dll"),
     tests: PackageTests
     ));
 
@@ -110,10 +100,11 @@ BuildSettings.Packages.Add(new ChocolateyPackage(
             "TestCentric.Metadata.dll", "Microsoft.Extensions.DependencyModel.dll"),
         HasDirectory("tools/net462").WithFiles(
             "nunit-agent-launcher-net80.dll", "nunit.engine.api.dll"),
-        HasDirectory("tools/net8.0").WithFiles(
+        HasDirectory("tools/net10.0").WithFiles(
             "nunit-agent-launcher-net80.dll", "nunit.engine.api.dll")
     },
-    testRunner: new AgentRunner(BuildSettings.ChocolateyTestDirectory + "nunit-extension-net80-pluggable-agent." + BuildSettings.PackageVersion + "/tools/agent/nunit-agent-net80.dll"),
+    testRunner: new AgentRunner(
+        BuildSettings.ChocolateyTestDirectory + "nunit-extension-net80-pluggable-agent." + BuildSettings.PackageVersion + "/tools/agent/nunit-agent-net80.dll"),
     tests: PackageTests));
 
 //////////////////////////////////////////////////////////////////////
