@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 		<RootNamespace>NUnit.Engine.Agents</RootNamespace>
-		<TargetFrameworks>net462;net8.0</TargetFrameworks>
-		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+		<TargetFrameworks>net462;net10.0</TargetFrameworks>
+		<OutputPath>..\..\bin\$(Configuration)\</OutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\nunit.snk</AssemblyOriginatorKeyFile>
@@ -14,5 +14,5 @@
 		<PackageReference Include="NUnit.Engine.Api" />
 		<PackageReference Include="NUnit.Extensibility.Api" />
 	</ItemGroup>
-	
+
 </Project>

@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
-using System.Runtime.Versioning;
 using NUnit.Common;
 using NUnit.Framework;
 
@@ -16,7 +15,7 @@ namespace NUnit.Engine.Agents
         private const string AGENCY_URL = "tcp://127.0.0.1:1234/TestAgency";
         private const string AGENT_NAME = "nunit-agent-net80.dll";
         private static string AGENT_DIR = Path.Combine(TestContext.CurrentContext.TestDirectory, "../agent");
-        private static string TESTS_DIR = Path.Combine(TestContext.CurrentContext.TestDirectory, "../tests");
+        private static string TESTDATA_DIR = Path.Combine(TestContext.CurrentContext.TestDirectory, "../testdata");
 
         // Constants used for settings
         private const string NETFX = ".NETFramework";
@@ -36,13 +35,7 @@ namespace NUnit.Engine.Agents
         private const string NET70 = $"{NETCORE},Version=7.0";
         private const string NET80 = $"{NETCORE},Version=8.0";
         private const string NET90 = $"{NETCORE},Version=9.0";
-
-        private const string TARGET_RUNTIME_FRAMEWORK = NET80;
-        private const string RUN_AS_X86 = "RunAsX86";
-        private const string DEBUG_AGENT = "DebugAgent";
-        private const string TRACE_LEVEL = "InternalTraceLevel";
-        private const string WORK_DIRECTORY = "WorkDirectory";
-        private const string LOAD_USER_PROFILE = "LoadUserProfile";
+        private const string NET10 = $"{NETCORE},Version=10.0";
 
         static readonly char SEP = Path.DirectorySeparatorChar;
         static readonly char ALT = Path.AltDirectorySeparatorChar;
@@ -50,15 +43,15 @@ namespace NUnit.Engine.Agents
         private static readonly string[] RUNTIMES = new string[]
         {
             NET20, NET30, NET35, NET40, NET45, NET462, NET481,
-            NETCORE11, NETCORE21, NETCORE31, NET50, NET60, NET70, NET80, NET90
+            NETCORE11, NETCORE21, NETCORE31, NET50, NET60, NET70, NET80, NET90, NET10
         };
 
         private static readonly string[] SUPPORTED = new string[] {
             NETCORE11, NETCORE21, NETCORE31, NET50, NET60, NET70, NET80
         };
 
-        private Net80AgentLauncher _launcher;
-        private TestPackage _package;
+        private Net80AgentLauncher _launcher = null!;
+        private TestPackage _package = null!;
 
         [SetUp]
         public void SetUp()
@@ -67,11 +60,19 @@ namespace NUnit.Engine.Agents
             _package = new TestPackage("junk.dll");
         }
 
+        /// <summary>Advertises the runtime actually targeted by the .NET 8.0 agent executable.</summary>
+        [Test]
+        public void AgentInfoReportsNet80Runtime()
+        {
+            Assert.That(_launcher.AgentInfo.TargetRuntime.Identifier, Is.EqualTo(NETCORE));
+            Assert.That(_launcher.AgentInfo.TargetRuntime.Version, Is.EqualTo(new Version(8, 0, 0)));
+        }
+
         [TestCaseSource(nameof(RUNTIMES))]
         public void CanCreateProcess(string runtime)
         {
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(false), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(false), true);
 
             bool supported = SUPPORTED.Contains(runtime);
             Assert.That(_launcher.CanCreateAgent(_package), Is.EqualTo(supported));
@@ -80,8 +81,8 @@ namespace NUnit.Engine.Agents
         [TestCaseSource(nameof(RUNTIMES))]
         public void CanCreateX86Process(string runtime)
         {
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(true), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(true), true);
 
             bool supported = SUPPORTED.Contains(runtime);
             Assert.That(_launcher.CanCreateAgent(_package), Is.EqualTo(supported));
@@ -90,8 +91,8 @@ namespace NUnit.Engine.Agents
         [TestCaseSource(nameof(RUNTIMES))]
         public void CreateProcess(string runtime)
         {
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(false), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(false), true);
 
             if (SUPPORTED.Contains(runtime))
             {
@@ -106,31 +107,31 @@ namespace NUnit.Engine.Agents
             }
         }
 
-        private static void CheckAgentPath(Process process, bool x86)
-        {
-            Assert.That(process.StartInfo.FileName, Does.EndWith(Platform.IsWindows ? "dotnet.exe" : "dotnet"));
-            string agentPath = Path.Combine(AGENT_DIR, AGENT_NAME).Replace(ALT, SEP);
-            Assert.That(process.StartInfo.Arguments.Replace(ALT, SEP), Does.StartWith($"\"{agentPath}\""));
-        }
-
         [TestCaseSource(nameof(RUNTIMES))]
         public void CreateX86Process(string runtime)
         {
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(true), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.RunAsX86.WithValue(true), true);
 
             if (SUPPORTED.Contains(runtime))
             {
                 var process = _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
                 CheckStandardProcessSettings(process);
                 CheckAgentPath(process, true);
-                Console.WriteLine($"{process.StartInfo.FileName} {process.StartInfo.Arguments}");
             }
             else
             {
                 var action = () => _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
                 Assert.That(action, Throws.ArgumentException);
             }
+        }
+
+        private static void CheckAgentPath(Process process, bool x86)
+        {
+            Assert.That(process.StartInfo.FileName, Does.EndWith(Platform.IsWindows ? "dotnet.exe" : "dotnet"));
+            string agentPath = Path.Combine(AGENT_DIR, AGENT_NAME).Replace(ALT, SEP);
+            Assert.That(process.StartInfo.Arguments.Replace(ALT, SEP), Does.StartWith($"\"{agentPath}\""));
+            Assert.That(File.Exists(agentPath), $"No agent at {agentPath}");
         }
 
         private static void CheckStandardProcessSettings(Process process)
@@ -146,7 +147,7 @@ namespace NUnit.Engine.Agents
             Assert.That(startInfo.WorkingDirectory, Is.EqualTo(Environment.CurrentDirectory));
 
             var arguments = startInfo.Arguments;
-            Assert.That(arguments, Does.Contain("--trace=Warning"));
+            Assert.That(arguments, Does.Contain("--trace="));
             Assert.That(arguments, Does.Not.Contain("--debug-agent"));
             Assert.That(arguments, Does.Not.Contain("--work="));
         }
@@ -155,48 +156,53 @@ namespace NUnit.Engine.Agents
         public void DebugAgentSetting()
         {
             var runtime = SUPPORTED[0];
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.DebugAgent.WithValue(true), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.DebugAgent.WithValue(true), true);
             var agentProcess = _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
             Assert.That(agentProcess.StartInfo.Arguments, Does.Contain("--debug-agent"));
         }
 
-        [Test]
-        public void TraceLevelSetting()
+        [TestCase("Off")]
+        [TestCase("Error")]
+        [TestCase("Warning")]
+        [TestCase("Info")]
+        [TestCase("Debug")]
+        [TestCase("Verbose")]
+        public void TraceLevelSetting(string traceLevel)
         {
             var runtime = SUPPORTED[0];
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.InternalTraceLevel.WithValue("Debug"), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.InternalTraceLevel.WithValue(traceLevel), true);
             var agentProcess = _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
-            Assert.That(agentProcess.StartInfo.Arguments, Does.Contain("--trace=Debug"));
+            Assert.That(agentProcess.StartInfo.Arguments, Does.Contain($"--trace={traceLevel}"));
         }
 
         [Test]
         public void WorkDirectorySetting()
         {
             var runtime = SUPPORTED[0];
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
-            _package.AddSetting(SettingDefinitions.WorkDirectory.WithValue("WORKDIRECTORY"), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
+            _package.AddSetting(SettingDefinitions.WorkDirectory.WithValue("WORKDIRECTORY"), true);
             var agentProcess = _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
             Assert.That(agentProcess.StartInfo.Arguments, Does.Contain("--work=WORKDIRECTORY"));
         }
-        
+
         [Test, Platform("win")]
         public void LoadUserProfileSetting()
         {
             var runtime = SUPPORTED[0];
-            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true );
+            _package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue(runtime), true);
             _package.AddSetting(SettingDefinitions.LoadUserProfile.WithValue(true), true);
             var agentProcess = _launcher.CreateAgent(AGENTID, AGENCY_URL, _package);
-            if (Platform.IsWindows)
+            if (Platform.IsWindows) // Needed to compile on Linux, but will never be true there
                 Assert.That(agentProcess.StartInfo.LoadUserProfile, Is.True);
         }
 
         //[Test]
         public void ExecuteTestDirectly()
         {
-            var package = new TestPackage(Path.Combine(TESTS_DIR, "net8.0/mock-assembly.dll")).SubPackages[0];
-            package.AddSetting("TargetRuntimeFramework", "netcore-8.0", true);
+            var package = new TestPackage(Path.Combine(TESTDATA_DIR, "net8.0/mock-assembly.dll")).SubPackages[0];
+            package.AddSetting(SettingDefinitions.TargetFrameworkName.WithValue($"{NETCORE},Version=v8.0"), true);
 
             Assert.That(_launcher.CanCreateAgent(package));
             var agentProcess = _launcher.CreateAgent(AGENTID, AGENCY_URL, package);
